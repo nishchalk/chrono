@@ -21,12 +21,38 @@ class TimeEntryCard extends ConsumerWidget {
 
   static final _exactFormat = DateFormat('MMM d, y • h:mm a');
 
+  static bool _isAnniversaryWeek(DateTime eventAt, DateTime now) {
+    // Only entries that already happened can have an anniversary.
+    if (eventAt.isAfter(now) || now.year <= eventAt.year) return false;
+
+    final anniversary = _safeAnniversaryDate(eventAt, now.year);
+    final start = DateTime(anniversary.year, anniversary.month, anniversary.day);
+    final endExclusive = start.add(const Duration(days: 7));
+    final today = DateTime(now.year, now.month, now.day);
+    return !today.isBefore(start) && today.isBefore(endExclusive);
+  }
+
+  static DateTime _safeAnniversaryDate(DateTime source, int year) {
+    final lastDayOfMonth = DateTime(year, source.month + 1, 0).day;
+    final safeDay = source.day <= lastDayOfMonth ? source.day : lastDayOfMonth;
+    return DateTime(year, source.month, safeDay);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(clockProvider);
     final now = DateTime.now();
     final scheme = Theme.of(context).colorScheme;
     final accent = Color(entry.color);
+    final isAnniversaryWeek = _isAnniversaryWeek(entry.eventAt, now);
+    final isAccentDark =
+        ThemeData.estimateBrightnessForColor(accent) == Brightness.dark;
+    final onAccent = isAccentDark ? Colors.white : Colors.black87;
+    final accentSoft = onAccent.withOpacity(0.82);
+    final cardBackground =
+        isAnniversaryWeek ? accent : scheme.surfaceContainerHighest.withOpacity(0.4);
+    final cardBorderColor =
+        isAnniversaryWeek ? accent : accent.withOpacity(0.35);
     final relative = RelativeTimeFormatter.format(entry.eventAt, now);
     final exact = _exactFormat.format(entry.eventAt.toLocal());
 
@@ -38,8 +64,8 @@ class TimeEntryCard extends ConsumerWidget {
         child: Ink(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: accent.withOpacity(0.35)),
-            color: scheme.surfaceContainerHighest.withOpacity(0.4),
+            border: Border.all(color: cardBorderColor),
+            color: cardBackground,
           ),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(8, 6, 4, 6),
@@ -50,7 +76,7 @@ class TimeEntryCard extends ConsumerWidget {
                   width: 4,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: accent,
+                    color: isAnniversaryWeek ? onAccent.withOpacity(0.95) : accent,
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -65,6 +91,7 @@ class TimeEntryCard extends ConsumerWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              color: isAnniversaryWeek ? onAccent : null,
                               fontWeight: FontWeight.w700,
                               height: 1.2,
                             ),
@@ -76,7 +103,7 @@ class TimeEntryCard extends ConsumerWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: accent.withOpacity(0.95),
+                                color: isAnniversaryWeek ? accentSoft : accent.withOpacity(0.95),
                                 fontWeight: FontWeight.w600,
                                 height: 1.1,
                               ),
@@ -88,7 +115,7 @@ class TimeEntryCard extends ConsumerWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: accent.withOpacity(0.92),
+                              color: isAnniversaryWeek ? accentSoft : accent.withOpacity(0.92),
                               fontWeight: FontWeight.w600,
                               height: 1.15,
                             ),
@@ -98,7 +125,9 @@ class TimeEntryCard extends ConsumerWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
+                              color: isAnniversaryWeek
+                                  ? onAccent.withOpacity(0.72)
+                                  : scheme.onSurfaceVariant,
                               height: 1.1,
                             ),
                       ),
@@ -111,7 +140,11 @@ class TimeEntryCard extends ConsumerWidget {
                   padding: EdgeInsets.zero,
                   tooltip: 'Delete',
                   onPressed: onDelete,
-                  icon: Icon(Icons.delete_outline_rounded, size: 18, color: scheme.outline),
+                  icon: Icon(
+                    Icons.delete_outline_rounded,
+                    size: 18,
+                    color: isAnniversaryWeek ? onAccent.withOpacity(0.92) : scheme.outline,
+                  ),
                 ),
               ],
             ),
