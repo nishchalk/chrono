@@ -41,11 +41,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               width: 32,
               height: 32,
               fit: BoxFit.contain,
-              semanticLabel: 'Time Tracker',
+              semanticLabel: 'Chrono',
             ),
           ),
         ),
-        title: const Text('Time Tracker'),
+        title: const Text('Chrono'),
         actions: [
           entriesAsync.when(
             data: (entries) {

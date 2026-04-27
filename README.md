@@ -1,51 +1,99 @@
-# Time Tracker
+# Chrono
 
-A **Flutter** (Android-focused) **Material 3** app to log moments in time and see **live**, calendar-aware relative labels such as `2 years 3 months 5 days ago` or `in 4 days 6 hours`.
+Chrono is a Flutter Android app to track important moments in time and show live relative labels such as `2 years 3 months 5 days ago` or `in 4 days 6 hours`.
+
+## Download APK
+
+- Build and package the installable APK as `crono.apk`:
+
+```bash
+cd /path/to/chrono
+flutter pub get
+flutter build apk --release
+cp build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/crono.apk
+```
+
+- Final APK path:
+  - `build/app/outputs/flutter-apk/crono.apk`
+
+You can share that `crono.apk` file directly for manual Android installation.
 
 ## Features
 
-- **Entries**: title + date-time (past or future)
-- **Live updates** every second via a clock stream
-- **Local storage** with **sqflite**
-- **CRUD**: add, edit (tap card), delete (with confirmation)
-- **Sorting**: closest upcoming first, or most recent past first
-- **Dark mode** follows system (`ThemeMode.system`)
-- **Clean architecture**: `domain` → `data` → `presentation`, Riverpod for DI and state
+- Create time entries with title, date-time, category, and custom color
+- Live relative time with calendar-aware breakdown (`years`, `months`, `days`, `hours`)
+- Past/future visual cues and dense list cards for high-information view
+- Sort entries by closest upcoming or most recent past
+- Filter entries by category from app-bar dropdown
+- Add, edit, and delete entries with confirmation
+- Dark mode support (`ThemeMode.system`)
+- Clock-based app logo in app bar and Android launcher icon
 
-## Project layout
+## Functionality
 
-```
+- **Entry management**
+  - Add entry via FAB
+  - Edit existing entry from the list
+  - Delete with confirmation dialog
+- **Time engine**
+  - Computes relative time using calendar-aware utilities
+  - Updates labels periodically for live display
+- **Organization**
+  - Category-based filtering
+  - Sort controls for timeline browsing
+- **Persistence**
+  - Stores entries locally in SQLite (`sqflite`)
+  - Handles schema migrations for new fields
+  - Uses Android backup rules to improve restore behavior where supported
+
+## Basic Architecture
+
+The app follows a clean layered architecture:
+
+- **Presentation layer** (`lib/presentation`)
+  - Screens, widgets, and Riverpod providers
+  - Handles UI state, filtering, sorting, and interactions
+- **Domain layer** (`lib/domain`)
+  - Core entities and repository contracts
+  - Framework-independent business model definitions
+- **Data layer** (`lib/data`)
+  - SQLite datasource and repository implementation
+  - Maps between database rows and domain entities
+- **Core utilities** (`lib/core`)
+  - Theme, constants, and relative-time calculation/formatting utilities
+
+## Project Structure
+
+```text
 lib/
-  main.dart                 # ProviderScope + runApp
-  app.dart                  # MaterialApp, themes
+  main.dart
+  app.dart
   core/
-    theme/app_theme.dart
+    constants/
+    theme/
     utils/
-      calendar_duration_parts.dart   # years…seconds between two instants
-      relative_time_formatter.dart   # human phrases
-    constants/database_constants.dart
   domain/
-    entities/time_entry.dart
-    repositories/time_entry_repository.dart
+    entities/
+    repositories/
   data/
-    models/time_entry_model.dart
-    datasources/time_entry_local_data_source.dart
-    repositories/time_entry_repository_impl.dart
+    datasources/
+    models/
+    repositories/
   presentation/
-    providers/…              # Riverpod: DB, repo, clock, sort, list notifier
-    screens/home_screen.dart
-    screens/entry_form_sheet.dart
-    widgets/time_entry_card.dart
-android/                    # Gradle + manifest (launcher icon uses a system drawable; replace for store)
-test/widget_test.dart
+    providers/
+    screens/
+    widgets/
+android/
+test/
+assets/
 ```
 
 ## Requirements
 
 - [Flutter](https://docs.flutter.dev/get-started/install) stable (Dart 3.5+)
-- Android SDK / emulator or device for `flutter run`
+- Android SDK + device/emulator
 
-## Run
+## Run Locally
 
 ```bash
 cd /path/to/chrono
@@ -53,15 +101,7 @@ flutter pub get
 flutter run
 ```
 
-If native folders are out of date with your Flutter SDK, regenerate without clobbering `lib/`:
-
-```bash
-flutter create . --project-name time_tracker --org com.timetracker
-```
-
-Then run `flutter pub get` again.
-
-## Tests
+## Test
 
 ```bash
 flutter test
@@ -69,5 +109,4 @@ flutter test
 
 ## Notes
 
-- The Android manifest uses `@android:drawable/ic_dialog_info` as a **placeholder launcher icon** so the project builds without generated mipmaps. For production, add adaptive launcher icons under `android/app/src/main/res/mipmap-*`.
-- `local.properties` (with `flutter.sdk`) is created by Flutter tooling and should not be committed.
+- `local.properties` (contains `flutter.sdk`) is machine-specific and should not be committed.

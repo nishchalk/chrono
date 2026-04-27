@@ -22,7 +22,7 @@ class _FakeRepository implements TimeEntryRepository {
 }
 
 void main() {
-  testWidgets('Time Tracker shows app bar title', (tester) async {
+  testWidgets('Chrono shows app bar title', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -33,6 +33,6 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Time Tracker'), findsOneWidget);
+    expect(find.text('Chrono'), findsOneWidget);
   });
 }

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
@@ -12,10 +14,28 @@ class TimeEntryLocalDataSource {
 
   final sqflite.Database _db;
 
+  /// Resolves the DB path: prefer [sqflite.getDatabasesPath] (Android/iOS standard folder so
+  /// in-place app updates keep the file and Auto Backup can include `time_tracker.db`).
+  ///
+  /// If an older build stored the DB under [getApplicationDocumentsDirectory], copy it once
+  /// so upgrades never start from an empty DB. The legacy file is left in place (not deleted).
+  static Future<String> _resolveDatabasePath() async {
+    final dbDir = await sqflite.getDatabasesPath();
+    final dbPath = p.join(dbDir, DatabaseConstants.fileName);
+    final legacyDir = await getApplicationDocumentsDirectory();
+    final legacyPath = p.join(legacyDir.path, DatabaseConstants.fileName);
+
+    final target = File(dbPath);
+    final legacy = File(legacyPath);
+    if (!await target.exists() && await legacy.exists()) {
+      await legacy.copy(dbPath);
+    }
+    return dbPath;
+  }
+
   /// Opens (or creates) the app SQLite file. Named distinctly from [sqflite.openDatabase].
   static Future<sqflite.Database> openAppDatabase() async {
-    final dir = await getApplicationDocumentsDirectory();
-    final path = p.join(dir.path, DatabaseConstants.fileName);
+    final path = await _resolveDatabasePath();
     return sqflite.openDatabase(
       path,
       version: DatabaseConstants.schemaVersion,
