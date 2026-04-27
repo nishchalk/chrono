@@ -4,6 +4,8 @@ Chrono is a Flutter Android app to track important moments in time and show live
 
 ## Download APK
 
+- Direct download: [`chrono.apk`](pre-built-app/chrono.apk)
+
 - Build and package the installable APK as `crono.apk`:
 
 ```bash
